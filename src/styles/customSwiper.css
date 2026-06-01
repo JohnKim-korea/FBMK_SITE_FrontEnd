@@ -1,0 +1,19 @@
+.board-swiper {
+  min-height: 300px;
+  padding-bottom: 35px; /* pagination 공간 */
+}
+@media (max-width: 767px) {
+  .nav-btn {
+    display: none;
+  }
+}
+
+
+
+.empty-card {
+  background: #f8f9fa;
+  color: #adb5bd;
+  border: 5px dashed #dee2e6;
+  margin : 1px;
+  font-size: 14px;
+}
