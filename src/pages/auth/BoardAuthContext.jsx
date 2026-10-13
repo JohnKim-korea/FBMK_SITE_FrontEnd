@@ -5,14 +5,17 @@ const AllBoardAuthProvider = createContext(null);
 
 export function BoardAuthProvider({ children }) {
   const [authBoardMap, setAuthBoardMap] = useState({});
+  const [authStudyMap, setAuthStudyMap] = useState({});// 신규추가
   
 
   const value = useMemo(() => {
     return {
       authBoardMap,
       setAuthBoardMap,
+      authStudyMap,
+      setAuthStudyMap,
     };
-  }, [authBoardMap]);
+  }, [authBoardMap, authStudyMap]);
 
 
   return (

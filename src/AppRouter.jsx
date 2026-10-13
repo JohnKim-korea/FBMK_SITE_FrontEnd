@@ -19,6 +19,13 @@ import IpWrite from "./pages/admin/IpWrite";
 import MemberManager from "./pages/admin/MemberManager";
 import CommentManager from "./pages/admin/CommentManager";
 import NotificationWrite from "./pages/admin/NotificationWrite";
+// 학습 도우미
+import Study from "./pages/study/Study"; 
+import StudySubjectAdd from "./pages/study/StudySubjectAdd";
+import StudyList from "./pages/study/StudyList";
+import StudyAdd from "./pages/study/StudyAdd";
+import StudyDetail from "./pages/study/StudyDetail";
+
 //createBrowserRouter는 URL이 바뀌면 해당 route의 loader를 다시 실행하는 기능을 기본으로 가지고있다. 
 //즉 useNavigate를 이용하여 URL을 바꿀때 자동으로 loader를 다시실행해서 페이징및 검색기능을 이용할수있다. 에초에 UseEffect 와 트리거가 다르다.
 /*
@@ -61,6 +68,118 @@ const router = useMemo(
             index: true,
             element: <UserHome />,
           },
+
+          {
+            path: "study",
+            element: <Study />,
+            loader: async ({ request }) => {
+              const url = new URL(request.url);
+              const page = url.searchParams.get("page") || 1;
+              const pageSize = url.searchParams.get("pageSize") || 4;
+              const res = await fetch(
+                `${import.meta.env.VITE_API_URL}/study/subjectStudyList?page=${page}&pageSize=${pageSize}`,
+              );
+              if (!res.ok) {
+                const errorData = await res.json();
+                const errorMessage = errorData.message || res.statusText;
+                throw new Response(errorMessage, {
+                  status: res.status,
+                });
+              }
+
+              return await res.json();
+            },
+          },
+          {
+            path: "/studySubjectAdd/:gubun",
+            element: <StudySubjectAdd />,
+          },
+          {
+            path: "/studySubjectAdd/:gubun/:category_id",
+            element: <StudySubjectAdd />,
+            loader: async ({ params }) => {
+              const { category_id } = params;
+
+              if (!category_id) return null;
+
+              const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/study/getSubject/${category_id}`,
+                { credentials: "include" },
+              );
+
+              const result = await response.json();
+
+              if (!response.ok) {
+                throw new Error("과목 조회에 실패했습니다.");
+              }
+
+              return result.data;
+            },
+          },
+          {
+            path: "studyList",
+            element: <StudyList />,
+            loader: async ({ request }) => {
+              const url = new URL(request.url);
+
+              const category_id = url.searchParams.get("category_id");
+              const category = url.searchParams.get("category");
+              const icon = url.searchParams.get("icon");
+              const page = url.searchParams.get("page") || 1;
+              const pageSize = url.searchParams.get("pageSize") || 10;
+
+              const res = await fetch(
+                `${import.meta.env.VITE_API_URL}/study/subSubjectStudyList` +
+                  `?category_id=${category_id}&page=${page}&pageSize=${pageSize}`,
+              );
+
+              if (!res.ok) {
+                const errorData = await res.json();
+                const errorMessage = errorData.message || res.statusText;
+
+                throw new Response(errorMessage, {
+                  status: res.status,
+                });
+              }
+
+              const data = await res.json();
+
+              return {
+                ...data,
+                category,
+                icon,
+              };
+            },
+          },
+          {
+            path: "studyAdd",
+            element: <StudyAdd />,
+          },
+          {
+            path: "studyUpdate",
+            element: <StudyAdd />,
+            loader: async ({ request }) => {
+              const url = new URL(request.url);
+              const category_id = url.searchParams.get("category_id");
+              const id = url.searchParams.get("id");
+
+              const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/study/getsubSubject?category_id=${category_id}&id=${id}`,
+              );
+
+              if (!response.ok) {
+                throw new Error("학습 정보를 불러오지 못했습니다.");
+              }
+
+              return response.json();
+            },
+          },
+
+          ,
+          {
+            path: "studyDetail",
+            element: <StudyDetail />,
+          },
           {
             path: "admin/CommentManager",
             element: <CommentManager />,
@@ -71,20 +190,20 @@ const router = useMemo(
               const q = url.searchParams.get("q") || "";
               const qw = url.searchParams.get("qw") || "";
               const order = url.searchParams.get("order") || "";
-            
-                const res = await fetch(
-                  `${import.meta.env.VITE_API_ADMIN}/getAllCommentData?page=${page}&pageSize=${pageSize}&qw=${qw}&q=${q}&order=${order}`,
-                  { credentials: "include" },
-                );
 
-                if (!res.ok) {
-                  const errorData = await res.json();
-                  const errorMessage = errorData.message || res.statusText;
-                  throw new Response(errorMessage, {
-                    status: res.status,
-                  });
-                }
-                return await res.json();
+              const res = await fetch(
+                `${import.meta.env.VITE_API_ADMIN}/getAllCommentData?page=${page}&pageSize=${pageSize}&qw=${qw}&q=${q}&order=${order}`,
+                { credentials: "include" },
+              );
+
+              if (!res.ok) {
+                const errorData = await res.json();
+                const errorMessage = errorData.message || res.statusText;
+                throw new Response(errorMessage, {
+                  status: res.status,
+                });
+              }
+              return await res.json();
             },
           },
           {
@@ -271,7 +390,7 @@ const router = useMemo(
                 return await res.json();
               } catch (error) {
                 if (error.message === "Not_Refresh_Token") {
-                  // loader에서는 navigate를 사용할 수 없기 때문에 redirect 사용                  
+                  // loader에서는 navigate를 사용할 수 없기 때문에 redirect 사용
                   throw redirect("/?expireRouter=true"); // 로그아웃을 쓰면 안될거같음
                 }
 

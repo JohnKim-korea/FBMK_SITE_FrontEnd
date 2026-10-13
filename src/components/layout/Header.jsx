@@ -3,6 +3,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "@/styles/custom.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import "@/styles/study.css"; // 2026-08-22 추가함 
 import "ckeditor5/ckeditor5.css";
 import { Link, useLocation,useNavigate } from "react-router-dom";
 import { useAuth } from "@/pages/auth/MyAuthContext";
@@ -123,10 +124,6 @@ function Header() {
       syncAuthBoard();
     }, [location.pathname]);
 
-  //  useEffect(() => {
-  //    console.log("authBoardMap", authBoardMap);
-  //  }, []);
-
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-primary-light">
@@ -180,6 +177,23 @@ function Header() {
                 자유게시판
               </Link>
             </li>
+
+            <li className="nav-item">
+              <Link
+                className="nav-link text-white d-flex align-items-center gap-2"
+                to="/study"
+              >
+                <i className="fa-solid fa-book-open"></i>
+                학습도우미 (개발중...)
+              </Link>
+            </li>
+
+            {/* <li className="nav-item">
+              <span className="nav-link text-white d-flex align-items-center gap-2">
+                <i className="fa-solid fa-book-open"></i>
+                학습도우미 (개발중...)
+              </span>
+            </li> */}
 
             {/* {adminUser || user ? (
               <li className="nav-item">

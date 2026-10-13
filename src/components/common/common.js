@@ -213,4 +213,98 @@ function uploadImg(loader, setShowModal, setModalText, setAlertState) {
   }
 }
 
-export { onClickBoardListViews, uploadImg, uploadFile ,deleteUploadFile};
+ const checkStudyAuthCookie = async (category_id) => {
+   const response = await fetch(
+     `${import.meta.env.VITE_API_URL}/study/checkAuthCookie/${category_id}`,
+     {
+       method: "GET",
+       credentials: "include",
+     },
+   );
+   const data = await response.json();
+   if (!response.ok || !data.check) {
+     return false;
+   }
+   return true;
+ };
+
+// 학습도우미
+ function uploadStudyImg(loader, setShowModal, setModalText, setAlertState) {
+   return {
+     upload: async () => {
+       try {
+         const file = await loader.file;
+
+         if (!file.type || !file.type.startsWith("image/")) {
+           setShowModal(true);
+           setModalText("이미지업로드만 가능합니다.");
+           setAlertState("error");
+           return Promise.reject(); // alert 창 막아줌
+         }
+
+         if (file.size > 5 * 1024 * 1024) {
+           const size = file.size;
+           const fileSize = (size) => {
+             switch (true) {
+               case size >= 1024 * 1024:
+                 return (size / (1024 * 1024)).toFixed(2) + " MB";
+
+               case size >= 1024:
+                 return (size / 1024).toFixed(2) + " KB";
+
+               default:
+                 return size + " B";
+             }
+           };
+           setShowModal(true);
+           setModalText(
+             `이미지는 5MB 이하만 가능합니다. 이미지크기 : ${fileSize(size)} `,
+           );
+           setAlertState("error");
+           return Promise.reject(); // 에러를 상위 함수로 전달
+         }
+
+         const formData = new FormData(); // 이걸 사용하면 번거롭게 header 안붙여도됨  Content-Type이 multipart/form-data 일때 적합
+         formData.append("upload", file);
+
+         const response = await fetch(
+           `${import.meta.env.VITE_API_URL}/study/upload`,
+           {
+             method: "POST",
+             body: formData,
+           },
+         );
+         // 에러처리
+         if (!response.ok) {
+           //res.status >= 200 && res.status < 300 이면 true 그외면 false
+           let message = "업로드 실패";
+           const text = await response.text(); // text()는 body를 그대로 읽는다. 만약 서버의 body가 문자열일 경우에 말이다.
+           try {
+             const json = JSON.parse(text); // 해당 parse를 실패했을때 catch에서 해당 문자열을 받음
+             message = json.message || message;
+           } catch {
+             message = text;
+           }
+           setShowModal(true);
+           setAlertState("error");
+           setModalText(message);
+           return Promise.reject();
+         }
+         const result = await response.json(); // body에있는 (객체 , Map) 으로가져옴
+        return {
+          default: `${import.meta.env.VITE_STUDY_IMAGE_URL}${result.url}`,
+        };
+       } catch (error) {
+         // 네트워크 오류 처리
+         setAlertState("error");
+         setModalText(
+           `네트워크 오류${error?.status ? ` (코드: ${error.status})` : ""}`,
+         );
+         setShowModal(true);
+         return Promise.reject();
+       }
+     },
+   };
+ }
+
+export { onClickBoardListViews, uploadImg, uploadFile ,deleteUploadFile, checkStudyAuthCookie, uploadStudyImg};

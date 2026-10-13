@@ -558,7 +558,7 @@ function BoardList() {
           onSubmitPassword={onSubmitPassword}
         />
       )}
-    </div>
+    </div> //조건이 true 일때만 뒷내용을 보여준다.
   );
 }
 export default BoardList;

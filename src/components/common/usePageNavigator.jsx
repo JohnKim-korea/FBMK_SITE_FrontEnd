@@ -95,6 +95,123 @@ function PageNavigator({ page, totalPage, changePage }) {
 }
 
 
+import { useRef } from "react";
+
+function StudyPageNavigator({ page, totalPage, changePage, children }) {
+  const dragStartX = useRef(0);
+
+  const movePage = (direction) => {
+    if (direction === "next") {
+      changePage(Math.min(page + 1, totalPage));
+    } else {
+      changePage(Math.max(page - 1, 1));
+    }
+  };
+
+  // 모바일
+  const handleTouchStart = (e) => {
+    dragStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    const endX = e.changedTouches[0].clientX;
+    const distance = dragStartX.current - endX;
+
+    if (distance > 50) {
+      movePage("next");
+    } else if (distance < -50) {
+      movePage("prev");
+    }
+  };
+
+  // PC
+  const handleMouseDown = (e) => {
+    dragStartX.current = e.clientX;
+  };
+
+  const handleMouseUp = (e) => {
+    const endX = e.clientX;
+    const distance = dragStartX.current - endX;
+
+    if (distance > 50) {
+      movePage("next");
+    } else if (distance < -50) {
+      movePage("prev");
+    }
+  };
+
+  return (
+    <>
+      <div
+        className="study-page-touch-area"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+      >
+        {children}
+      </div>
+
+      {totalPage > 1 && (
+        <div className="study-pagination">
+          <button
+            type="button"
+            onClick={() => movePage("prev")}
+            disabled={page === 1}
+          >
+            ‹
+          </button>
+
+          <span>
+            {page} / {totalPage}
+          </span>
+
+          <button
+            type="button"
+            onClick={() => movePage("next")}
+            disabled={page === totalPage}
+          >
+            ›
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+
+function SelectStudyPageSize({ page, totalPage, changePage, pageSize, changePageSize, children}) {
+  const dragStartX = useRef(0);
+
+  const movePage = (direction) => {
+    if (direction === "next") {
+      changePage(Math.min(page + 1, totalPage));
+    } else {
+      changePage(Math.max(page - 1, 1));
+    }
+  };
+
+  return (
+    <div className="study-page-navigator">
+      {/* 페이지 사이즈 선택 */}
+      <div className="study-page-size">
+        <select
+          className="study-search-select"
+          value={pageSize}
+          onChange={(e) => changePageSize(Number(e.target.value))}
+        >
+          <option value={10}>10개</option>
+          <option value={20}>20개</option>
+          <option value={30}>30개</option>
+          <option value={50}>50개</option>
+        </select>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+
   // page 현재페이지 초깃값:1
   // pageSize 페이지당 보여줄개수
   // totalPage 전체페이지 개수
@@ -118,4 +235,10 @@ function PageNavigator({ page, totalPage, changePage }) {
   // }, [page, pageSize, searchText]);
 
 
-export { PageNavigator, CommentPageNavigator, PageSelctor };
+export {
+  PageNavigator,
+  CommentPageNavigator,
+  PageSelctor,
+  StudyPageNavigator,
+  SelectStudyPageSize,
+};
