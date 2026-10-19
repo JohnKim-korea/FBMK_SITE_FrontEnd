@@ -138,7 +138,7 @@
   display: grid;
 
   grid-template-columns: repeat(2, minmax(0, 1fr));
-
+  
   gap: 20px;
 }
 
@@ -175,6 +175,7 @@
 }
 
 .category-card:hover {
+    z-index: 100;
   transform: translateY(-2px);
 
   box-shadow: 0 7px 20px rgba(0, 0, 0, 0.08);
@@ -287,9 +288,9 @@
 /* 메뉴 */
 .category-menu {
   position: absolute;
-
   top: 15px;
   right: 42px;
+  z-index: 101; /* 수정한곳 */
 }
 
 .category-menu > button {
@@ -304,24 +305,17 @@
 /* 메뉴 */
 .category-menu-dropdown {
   display: none;
-
   position: absolute;
-
   top: 30px;
   right: 0;
-
   width: 130px;
-
   background: white;
-
   border-radius: 10px;
-
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-
   overflow: hidden;
-
-  z-index: 20;
+  z-index: 102; /* 수정한곳 */
 }
+
 
 .category-menu:hover .category-menu-dropdown {
   display: block;
@@ -390,6 +384,7 @@
 
   .category-list {
     grid-template-columns: repeat(2, 1fr);
+    
   }
 
 }
@@ -432,7 +427,7 @@
   */
   .category-list {
     grid-template-columns: 1fr;
-
+    
     gap: 14px;
   }
 
@@ -723,6 +718,7 @@
 }
 
 .study-search-select {
+  min-width: 0;
   width: 110px;
   height: 44px;
   padding: 0 10px;
@@ -780,6 +776,8 @@
   color: #222;
   font-size: 17px;
   font-weight: 700;
+   overflow-wrap: break-word; /* 수정한곳 */
+  word-break: normal; /* 수정한곳 */
 }
 
 .study-list-content {
@@ -809,19 +807,26 @@
 /* =========================
    Mobile
 ========================= */
-
+/* 태블릿 및 모바일 */
 @media (max-width: 768px) {
   .study-list-page {
     width: 100%;
+    min-width: 0;
+    padding: 0 10px;
+    box-sizing: border-box;
   }
 
   .study-search-box {
+    display: flex;
     flex-wrap: wrap;
+    gap: 8px; 
   }
 
   .study-search-input {
     width: 100%;
-    flex: none;
+    flex: 0 0 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   .study-search-select {
@@ -835,15 +840,85 @@
   }
 
   .study-list-item {
-    padding: 17px 18px;
+    padding: 14px 12px; 
+    min-width: 0;
+    box-sizing: border-box;
   }
 
-  .study-list-title {
-    font-size: 16px;
-  }
+
+  .study-list-title-row {
+  display: flex;
+  flex-direction: column; 
+  align-items: stretch; 
+  gap: 8px;
+  min-width: 0;
+}
+
+.study-list-title {
+  display: block; 
+  width: 100%;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: normal;
+  overflow-wrap: break-word; 
+  cursor: pointer;
+}
+
+.study-list-actions {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+ 
 
   .study-list-content {
     font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere; 
+  }
+
+  .study-edit-button,
+  .study-delete-button {
+    padding: 5px 7px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}
+
+/* 작은 모바일: 아이폰 14 Pro 포함 */
+@media (max-width: 430px) {
+  .study-list-item {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .study-list-title-row {
+    display: grid; 
+    grid-template-columns: minmax(0, 1fr) auto; 
+    align-items: start;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .study-list-title {
+    display: block;
+    width: 100%; 
+    min-width: 0;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  .study-list-actions {
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 0;
+    gap: 4px;
   }
 }
 
@@ -857,6 +932,8 @@
 .study-list-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  flex-shrink: 0;
   gap: 8px;
 }
 
@@ -872,31 +949,76 @@
   cursor: pointer;
 }
 
+/* 모바일 */
 @media (max-width: 768px) {
   .study-list-header {
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
+    gap: 12px;
   }
 
   .study-list-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
     width: 100%;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    align-items: center;
   }
 
   .study-hide-content {
-    margin-top: 0;
-    margin-left: 0;
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 2px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .study-hide-content input {
+    margin: 0;
   }
 
   .study-search-select {
-    flex: 1;
+    width: 100%;
     min-width: 0;
+    height: 38px;
+    padding: 0 8px;
+    border-radius: 7px;
+    box-sizing: border-box;
+    font-size: 10px;
   }
 
   .study-add-button {
-    flex-shrink: 0;
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 40px;
+    margin-top: 2px;
+    padding: 0 10px;
+    border-radius: 7px;
+    font-size: 13px;
+  }
+}
+
+/* 작은 모바일 */
+@media (max-width: 380px) {
+  .study-list-actions {
+    gap: 7px;
+  }
+
+  .study-search-select {
+    height: 36px;
+    padding: 0 5px;
+    font-size: 9px;
+  }
+
+  .study-hide-content {
+    font-size: 12px;
+  }
+
+  .study-add-button {
+    height: 38px;
+    font-size: 12px;
   }
 }
 
@@ -1224,9 +1346,10 @@
 /*수정 삭제 공간*/
 .study-list-title-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
 }
 
 .study-list-actions {
@@ -1260,4 +1383,29 @@
 
 .study-delete-button:hover {
   background: #fff0f1;
+}
+
+
+/* 수정한곳: 학습 주제 중복 확인 메시지 */
+.topic-check-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -8px 0 8px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.topic-check-message.duplicate {
+  color: #dc3545;
+  background-color: #fff0f0;
+  border: 1px solid #f5c2c7;
+}
+
+.topic-check-message.available {
+  color: #198754;
+  background-color: #edf8f1;
+  border: 1px solid #badbcc;
 }

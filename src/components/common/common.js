@@ -221,6 +221,7 @@ function uploadImg(loader, setShowModal, setModalText, setAlertState) {
        credentials: "include",
      },
    );
+   
    const data = await response.json();
    if (!response.ok || !data.check) {
      return false;

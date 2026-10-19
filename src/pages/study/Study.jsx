@@ -85,7 +85,7 @@ function Study() {
         }));
         setShowPasswordModal(false);
         if(actionType === "delete"){
-           setActionType(null);
+          setActionType(null);
           await handleDeleteStudy(selectStudyId, true);
           return;
         }
@@ -95,6 +95,20 @@ function Study() {
            navigate(`/studySubjectAdd/update/${selectStudyId}`);
            return;
          }
+
+         if (actionType === "ExcelBackUp") {
+           setActionType(null);
+           await handleExcelBackup(selectStudyId,true);
+           return;
+         }
+
+          if (actionType === "CsvBackUp") {
+            setActionType(null);
+            await handleCsvBackup(selectStudyId, true);
+            return;
+          }
+
+
         // 추후 학습 페이지 이동
         navigate(
           `/studyList?category_id=${selectStudyId}&category=${encodeURIComponent(
@@ -257,8 +271,121 @@ function Study() {
 
   const handleConfirmResult = (isConfirmed) => {
     setShowConfirm(false);
-    if (isConfirmed) {
+    if (isConfirmed && actionType === "delete") {
       handleDeleteStudy(selectStudyId, true);
+    } 
+    if(isConfirmed && actionType == "CsvBackUp"){
+       handleCsvBackup(selectStudyId, true);
+    }
+    if(isConfirmed && actionType == "ExcelBackUp"){
+       handleExcelBackup(selectStudyId,true);
+    }
+    
+  };
+
+
+  const handleCsvBackup = async (category_id = null, isConfirm = false) => {
+    if (!isConfirm) {
+      setButtonType("none");
+      setConfirmText("CSV 백업하시겠습니까?");
+      setSelectStudyId(category_id);
+      setActionType("CsvBackUp");
+      setShowConfirm(true);
+      return;
+    }
+
+    try {
+      const isAuth = await checkStudyAuthCookie(category_id);
+
+      if (!isAuth) {
+        setShowConfirm(false);
+        setShowPasswordModal(true);
+        return;
+      }
+
+      // CSV 백업 요청
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/study/csvBackup/${category_id}`,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("CSV 백업에 실패했습니다.");
+      }
+
+      // CSV 파일 다운로드
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
+      a.href = url;
+      a.download = `학습백업_${dateStr}.csv`;
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+      setSelectStudyId(null);
+    } catch (error) {
+      console.error(error);
+      setModalText(error.message || "CSV 백업 중 오류가 발생했습니다.");
+      setAlertState(false);
+      setShowModal(true);
+      setSelectStudyId(null);
+    }
+  };
+
+  const handleExcelBackup = async (category_id = null, isConfirm = false) => {
+    if (!isConfirm) {
+      setButtonType("Excel");
+      setConfirmText("액셀 백업하시겠습니까?");
+      setSelectStudyId(category_id);
+      setActionType("ExcelBackUp");
+      setShowConfirm(true);
+      return;
+    }
+
+    try {
+      const isAuth = await checkStudyAuthCookie(category_id);
+      if (!isAuth) {
+        setShowConfirm(false);
+        setShowPasswordModal(true);
+        return;
+      }
+
+      //  엑셀 백업 요청
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/study/excelBackup/${category_id}`,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("엑셀 백업에 실패했습니다.");
+      }
+
+      //  엑셀 파일 다운로드
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
+      a.href = url;
+      a.download = `학습백업_${dateStr}.xlsx`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      setSelectStudyId(null);
+    } catch (error) {
+      console.error(error);
+      setModalText(error.message || "Excel 백업 중 오류가 발생했습니다.");
+      setAlertState(false);
+      setShowModal(true);
+      setSelectStudyId(null);
     }
   };
 
@@ -297,7 +424,7 @@ function Study() {
       }
       if (data.check) {
         setShowConfirm(false);
-        setSelectStudyId(0);
+        setSelectStudyId(null);
         revalidate();
         return;
       }
@@ -305,17 +432,20 @@ function Study() {
       setShowModal(true);
       setModalText("삭제에 실패했습니다.");
       setAlertState("error");
+      setSelectStudyId(null);
     } catch (error) {
       console.log(error);
       setShowConfirm(false);
       setShowModal(true);
       setModalText(error.status + ":" + error.message);
       setAlertState("error");
+      setSelectStudyId(null);
     } finally {
       // 삭제 로딩 종료
       setIsDeleting(false);
     }
   };
+
 
   return (
     <div className="study-page">
@@ -330,14 +460,27 @@ function Study() {
               <small className="text-muted">
                 공부할 주제를 선택하고 학습 내용을 정리해보세요.
                 <div className="mt-2 p-2 border rounded bg-light">
-                  <div className="fw-semibold mb-1">학습 안내</div>
+                  <div className="fw-semibold mb-1">학습 안내 및 이용 정책</div>
                   <div>
                     · 로그인 없이 자유롭게 학습 내용을 등록할 수 있습니다.
                   </div>
                   <div>
                     · 대분류 → 중분류 → 소분류로 학습 내용을 관리할 수 있습니다.
                   </div>
-                  <div>· 제목을 클릭해야 해당 과목에 들어갈수있습니다.</div>
+                  <div>
+                    · 학습 자료는 엑셀 파일로 백업하고 다시 불러올 수 있습니다.
+                  </div>
+                  <div className="fw-bold">
+                    · 백업 이미지에는 보관 기간이 있으며, 기간이 지나면 자동
+                    삭제될 수 있습니다.
+                  </div>
+                  <div className="fw-bold">
+                    · 백업 이미지가 만료된 경우에도 학습 데이터는 불러올 수
+                    있지만, 이미지 복원은 불가능합니다.
+                  </div>
+                  <div className="fw-bold">
+                    · 중요한 학습 자료와 이미지는 정기적으로 백업해 주세요.
+                  </div>
                 </div>
               </small>
             </div>
@@ -431,6 +574,7 @@ function Study() {
                     <div className="category-menu-dropdown">
                       <button
                         type="button"
+                        className="text-primary"
                         onClick={() => {
                           // console.log("study 객체:", study);
                           // console.log("category_id:", study.category_id);
@@ -446,6 +590,23 @@ function Study() {
                         onClick={() => handleDeleteStudy(study.category_id)}
                       >
                         <i className="bi bi-trash3"></i> 삭제
+                      </button>
+
+                      {/* 수정한곳: CSV 백업 */}
+                      <button
+                        type="button"
+                        onClick={() => handleCsvBackup(study.category_id)}
+                      >
+                        <i className="bi bi-filetype-csv"></i> CSV 백업
+                      </button>
+
+                      {/* 수정한곳: 엑셀 백업 */}
+                      <button
+                        type="button"
+                        className="text-success"
+                        onClick={() => handleExcelBackup(study.category_id)}
+                      >
+                        <i className="bi bi-file-earmark-excel"></i> 엑셀 백업
                       </button>
                     </div>
                   </div>

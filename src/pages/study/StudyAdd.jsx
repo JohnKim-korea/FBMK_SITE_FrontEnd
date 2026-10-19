@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams, useLoaderData,useRevalidator  } from "react-router-dom";
+import { useNavigate, useSearchParams, useLoaderData,useRevalidator ,useLocation } from "react-router-dom";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import MinSeokEditor from "@/components/common/MinSeokEditor";
 import { Alert, Confirm } from "@/components/common/Modal";
 import { uploadStudyImg } from "@/components/common/common";
 
+
 function StudyAdd() {
+  const location = useLocation();
+  const from = location.state?.from;
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const loaderData = useLoaderData();
@@ -17,6 +20,10 @@ function StudyAdd() {
   // id가 있으면 수정, 없으면 추가
   const isUpdate = Boolean(id);
   const study = loaderData?.study;
+  
+  // 중복체크
+  const [topicCheck, setTopicCheck] = useState(null);
+  const [duplicateId,setDuplicateId] = useState(null);
 
   const [main_category, setMain_category] = useState("");
   const [sub_category, setSub_category] = useState("");
@@ -32,6 +39,15 @@ function StudyAdd() {
       setSmall_category(study.small_category ?? "");
       setTopic(study.topic ?? "");
       setContent(study.content ?? "");
+    } else if (!isUpdate) {
+      // 수정한곳: 추가 화면으로 돌아오면 기존 데이터 초기화
+      setMain_category("");
+      setSub_category("");
+      setSmall_category("");
+      setTopic("");
+      setContent("");
+      setTopicCheck(null);
+      setDuplicateId(null);
     }
   }, [isUpdate, study]);
 
@@ -45,6 +61,23 @@ function StudyAdd() {
   const [buttonType, setButtonType] = useState("");
   const [confirmText, setConfirmText] = useState("");
 
+
+  const checkTopicDuplicate = async () => {
+    if (!topic.trim()) return;
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/study/checkTopic?category_id=${category_id}&topic=${encodeURIComponent(topic)}`,
+      );
+      const data = await response.json();
+      setTopicCheck(data.check);
+      setDuplicateId(data.id);
+    } catch (error) {
+      setTopicCheck(null);
+      setDuplicateId(null);
+      console.error(error);
+    }
+  };
   const handleConfirmResult = (isConfirmed) => {
     setShowConfirm(false);
 
@@ -53,6 +86,7 @@ function StudyAdd() {
     }
   };
 
+  
   const onSubmitHandle = async (isConfirm = false) => {
     if (!isConfirm) {
       setButtonType(isUpdate ? "update" : "register");
@@ -91,7 +125,6 @@ function StudyAdd() {
       data.append("id", id);
     }
 
-    // 추가 / 수정 API 구분
     const apiUrl = isUpdate
       ? `${import.meta.env.VITE_API_URL}/study/updateSubSubject`
       : `${import.meta.env.VITE_API_URL}/study/addSubSubject`;
@@ -138,6 +171,29 @@ function StudyAdd() {
       setModalText(error.message || "학습 처리 중 오류가 발생했습니다.");
     }
   };
+  const handleBack = () => {
+    
+    if (from) {
+      navigate(from, { replace: true });
+      navigate(-1);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+
+    if (params.get("duplicate") === "true") {
+      params.delete("duplicate");
+
+      // 수정한곳: 기존 state 유지
+      navigate(`${location.pathname}?${params.toString()}`, {
+        replace: true,
+        state: location.state,
+      });
+    }
+  }, [location.pathname, location.search, location.state, navigate]);
 
   return (
     <div className="study-page">
@@ -195,12 +251,65 @@ function StudyAdd() {
               <input
                 id="studyTopic"
                 type="text"
-                placeholder="학습 주제를 입력하세요."
+                placeholder={
+                  !isUpdate
+                    ? "학습 주제를 입력후 Enter를 누르면 중복검사가 됩니다."
+                    : "학습 주제를 입력해주세요."
+                }
                 required
                 value={topic}
-                onChange={(e) => setTopic(e.target.value)}
+                onChange={(e) => {
+                  setTopic(e.target.value);
+                  setTopicCheck(null); // 초기화
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    checkTopicDuplicate();
+                  }
+                }}
               />
             </div>
+
+            {!isUpdate && topicCheck !== null && (
+              <>
+                <p
+                  className={`topic-check-message ${
+                    topicCheck ? "duplicate" : "available"
+                  }`}
+                >
+                  <i
+                    className={`bi ${
+                      topicCheck ? "bi-x-circle-fill" : "bi-check-circle-fill"
+                    }`}
+                  ></i>
+                  {topicCheck
+                    ? "이미 존재하는 주제입니다."
+                    : "사용 가능한 주제입니다."}
+                </p>
+
+                {/* 중복 주제 수정 버튼 */}
+                {topicCheck && duplicateId != null && (
+                  <button
+                    type="button"
+                    className="btn btn-warning btn-sm mt-1"
+                    onClick={() =>
+                      navigate(
+                        `/studyUpdate?category_id=${category_id}&id=${duplicateId}&duplicate=true`,
+                        {
+                          state: {
+                            from: `/studyAdd?category_id=${category_id}`,
+                          },
+                        },
+                      )
+                    }
+                  >
+                    <i className="bi bi-arrow-up me-1"></i>
+                    기존 주제 수정하기
+                  </button>
+                )}
+              </>
+            )}
 
             <div className="study-form-group">
               <div className="mb-4">
@@ -238,7 +347,7 @@ function StudyAdd() {
               <button
                 type="button"
                 className="study-cancel-button"
-                onClick={() => navigate(-1)}
+                onClick={handleBack}
               >
                 취소
               </button>

@@ -15,7 +15,7 @@ function Layout() {
   const showSidbar = location.pathname.startsWith("/login/");
   const showAdminSidbar = location.pathname.startsWith("/admin/");
   const isLoginInfo = location.pathname === "/loginInfo";
-  const isStudyDetail = location.pathname === "/studyDetail";
+  const isStudy = location.pathname === "/study";
 
   useEffect(() => {
     initAuth();
@@ -27,7 +27,7 @@ function Layout() {
     <>
       <ScrollToTop />
       <Header />
-      {!isStudyDetail && <ScrollTopButton />}
+      {!isStudy && <ScrollTopButton />}
       <main
         className={
           isLoginInfo

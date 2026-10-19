@@ -31,7 +31,15 @@ function Alert({ alertState = "",modalText, setShowModal, showModal }) {
           {/* 부모의 이벤트 함수 무시하는 함수  #00BFFF*/}
           <div className="modal-content border-0 shadow">
             <div
-              className={`modal-header text-white ${alertState === "success" ? "bg-success" : alertState === "error" ? "bg-danger" : ""}`}
+              className={`modal-header text-white ${
+                alertState === "success"
+                  ? "bg-success"
+                  : alertState === "error"
+                    ? "bg-danger"
+                    : alertState === "warning"
+                      ? "bg-warning text-dark"
+                      : ""
+              }`}
               style={
                 alertState !== "success" && alertState !== "error"
                   ? { backgroundColor: "#00BFFF" }
@@ -46,7 +54,12 @@ function Alert({ alertState = "",modalText, setShowModal, showModal }) {
               ></button>
             </div>
             <div className="modal-body mt-2">
-              <p className="fw-bold text-center fs-5" style={{whiteSpace:"pre-line"}}>{modalText}</p>
+              <p
+                className="fw-bold text-center fs-5"
+                style={{ whiteSpace: "pre-line" }}
+              >
+                {modalText}
+              </p>
             </div>
             <div className="modal-footer justify-content-center">
               <button
@@ -79,6 +92,9 @@ function Confirm({buttonType = "default",confirmText = "",onConfirmResult}) {
   } else if (buttonType === "register") {
     headerClass = "bg-primary text-white";
     confirmBtnClass = "btn btn-primary";
+  } else if (buttonType === "Excel") {
+    headerClass = "bg-success text-white";
+    confirmBtnClass = "btn btn-success";
   } else {
     headerClass = "bg-secondary text-white";
     confirmBtnClass = "btn btn-secondary";
